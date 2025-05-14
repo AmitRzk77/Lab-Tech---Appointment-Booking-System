@@ -12,7 +12,7 @@ class ServiceNestedSerializer(serializers.ModelSerializer):
 class CategoryNestedSerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
-        fields = [ 'category_name', 'parent']
+        fields = [ 'category', 'parent']
 
 class AppointmentListSerializers(serializers.ModelSerializer):
     service = ServiceNestedSerializer(read_only=True)

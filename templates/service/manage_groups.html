@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="p-6">
+    <h1 class="text-2xl font-bold mb-6">Manage Groups</h1>
+
+    <!-- Table -->
+    <div class="overflow-x-auto bg-white rounded shadow">
+        <table class="min-w-full text-sm text-left">
+            <thead class="bg-gray-100 border-b">
+                <tr>
+                    <th class="px-4 py-2">SN</th>
+                    <th class="px-4 py-2">Category</th>
+                    <th class="px-4 py-2">Parent Category</th>
+                    <th class="px-4 py-2">Sub Categories</th>
+                    <th class="px-4 py-2">Actions</th>
+                </tr>
+            </thead>
+            <tbody id="group_table" class="divide-y">
+                <!-- Group rows will be populated by JS -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Axios CDN -->
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+<script>
+    axios.defaults.headers.common['X-CSRFToken'] = document.querySelector('[name=csrf-token]').content;
+</script>
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        fetchGroups();
+    });
+
+    function fetchGroups() {
+        axios.get('/api/categories/')
+            .then(response => {
+                const categories = response.data;
+                const tbody = document.getElementById('group_table');
+                tbody.innerHTML = '';
+
+                categories.forEach((category, index) => {
+                    const subcategories = category.sub_categories?.map(sub => sub.category).join(', ') || '—';
+                    tbody.innerHTML += `
+                        <tr>
+                            <td class="px-4 py-2">${index + 1}</td>
+                            <td class="px-4 py-2">${category.category}</td>
+                            <td class="px-4 py-2">${category.parent?.category || '—'}</td>
+                            <td class="px-4 py-2">${subcategories}</td>
+                            <td class="px-4 py-2 space-x-2">
+                                <button class="text-blue-500 hover:underline" onclick="editCategory(${category.id}, '${category.category}')">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="text-red-500 hover:underline" onclick="deleteCategory(${category.id})">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            })
+            .catch(error => {
+                console.error('Failed to fetch groups:', error);
+            });
+    }
+
+    function deleteCategory(id) {
+        if (confirm("Are you sure you want to delete this category?")) {
+            axios.delete(`/api/categories/${id}/`)
+                .then(() => {
+                    alert("Category deleted successfully");
+                    fetchGroups();
+                })
+                .catch(error => {
+                    console.error("Error deleting category:", error);
+                    alert("Failed to delete category.");
+                });
+        }
+    }
+
+    function editCategory(id, currentName) {
+        const newName = prompt("Enter new category name:", currentName);
+        if (newName && newName !== currentName) {
+            axios.patch(`/api/categories/${id}/`, { category: newName })
+                .then(() => {
+                    alert("Category updated successfully");
+                    fetchGroups();
+                })
+                .catch(error => {
+                    console.error("Error updating category:", error);
+                    alert("Failed to update category.");
+                });
+        }
+    }
+</script>
+{% endblock %}

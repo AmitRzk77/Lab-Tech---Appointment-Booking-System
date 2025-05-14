@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="p-6 max-w-4xl mx-auto bg-white rounded shadow">
+    <h2 class="text-2xl font-bold mb-6">Add Service</h2>
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Name -->
+            <div>
+                <label class="block text-sm font-semibold mb-1">Name</label>
+                <input type="text" name="name" class="w-full border px-3 py-2 rounded" required>
+            </div>
+
+            <!-- Category -->
+            <div>
+                <label class="block text-sm font-semibold mb-1">Category</label>
+                <select name="category" class="w-full border px-3 py-2 rounded" required>
+                    <option>Select Category</option>
+                    {% for cat in categories %}
+                        <option value="{{ cat.id }}">{{ cat.category }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Subcategory -->
+            <div>
+                <label class="block text-sm font-semibold mb-1">Sub-Category</label>
+                <select name="subcategory" class="w-full border px-3 py-2 rounded">
+                    <option>Select Sub-Category</option>
+                    {% for sub in subcategories %}
+                        <option value="{{ sub.id }}">{{ sub.category }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Price -->
+            <div>
+                <label class="block text-sm font-semibold mb-1">Price</label>
+                <input type="text" name="price" class="w-full border px-3 py-2 rounded">
+            </div>
+
+            <!-- Tags -->
+            <div class="col-span-2">
+                <label class="block text-sm font-semibold mb-1">Tags</label>
+                <input type="text" name="tags" placeholder="e.g. Blood Test, Hormone" class="w-full border px-3 py-2 rounded">
+                <!-- Optional JS for tagging -->
+            </div>
+
+            <!-- Description -->
+            <div class="col-span-2">
+                <label class="block text-sm font-semibold mb-1">Description</label>
+                <textarea name="description" rows="4" class="w-full border px-3 py-2 rounded"></textarea>
+            </div>
+
+            <!-- Feature Image -->
+            <div class="col-span-2">
+                <label class="block text-sm font-semibold mb-1">Feature Image</label>
+                <input type="file" name="feature_image" accept="image/*" class="w-full border px-3 py-2 rounded">
+            </div>
+
+            <!-- Other Images -->
+            <div class="col-span-2">
+                <label class="block text-sm font-semibold mb-1">Other Images</label>
+                <input type="file" name="other_images" accept="image/*" multiple class="w-full border px-3 py-2 rounded">
+            </div>
+        </div>
+
+        <!-- Submit Button -->
+        <div class="mt-6 text-right">
+            <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded">Add Service</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

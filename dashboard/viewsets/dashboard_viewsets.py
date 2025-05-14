@@ -8,6 +8,8 @@ from contact.serializers.contact_serializers import ContactListSerializers
 from django.db.models import Sum
 from django.utils.timezone import now
 from datetime import timedelta
+from django.shortcuts import render
+from django.http import HttpRequest, HttpResponse, request
 
 
 class dashboardViewSet(ViewSet):
@@ -29,8 +31,15 @@ class dashboardViewSet(ViewSet):
             ).aggregate(Sum('amount'))['amount__sum'] or 0
             revenue_chart.append({'month': month_name, 'amount': amount})
 
-        # Use existing serializers
-        recent_bookings = Appointments.objects.order_by('-created_at')[:5]
+        # Filter recent bookings based on payment_option
+        recent_online_bookings = Appointments.objects.filter(
+            payment_option='ONLINE PAYMENT'
+        ).order_by('-created_at')[:5]
+
+        recent_office_bookings = Appointments.objects.filter(
+            payment_option='PAYMENT AT CLINIC'
+        ).order_by('-created_at')[:5]
+
         recent_inquiries = Contact.objects.order_by('-created_at')[:5]
 
         return Response({
@@ -38,6 +47,7 @@ class dashboardViewSet(ViewSet):
             'total_services': total_services,
             'total_inquiries': total_inquiries,
             'revenue_chart': revenue_chart,
-            'recent_bookings': AppointmentListSerializers(recent_bookings, many=True).data,
+            'recent_online_bookings': AppointmentListSerializers(recent_online_bookings, many=True).data,
+            'recent_office_bookings': AppointmentListSerializers(recent_office_bookings, many=True).data,
             'recent_inquiries': ContactListSerializers(recent_inquiries, many=True).data,
         })

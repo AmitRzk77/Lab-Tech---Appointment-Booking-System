@@ -2,14 +2,14 @@ from rest_framework import viewsets
 from ..serializers.branches_serializers import BranchListSerializers,BranchRetriveSerializers,BranchWriteSerializers
 from ..models import Branch
 #from ..utilities.pagination import MyPagenumberPagination
-#from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated
 
 
 class branchesViewsets(viewsets.ModelViewSet):
     serializer_class = BranchListSerializers
     queryset = Branch.objects.all().order_by('-id')
     #pagination_class = MyPagenumberPagination
-   # permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated]
 
 
 def get_queryset(self):

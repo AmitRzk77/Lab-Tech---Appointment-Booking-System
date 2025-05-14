@@ -18,7 +18,7 @@ class Appointments(models.Model):
     gender = models.CharField(max_length=1, choices = GENDER_CHOICES)
     service = models.ForeignKey(Service, on_delete=models.CASCADE, related_name='appointments_services')
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, related_name= 'select_category')
-    sub_category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True, related_name='select_sub_category')  # <== ADDED
+    #sub_category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True, related_name='select_sub_category')  # <== ADDED
     message = models.TextField(blank=True)
     payment_option = models.CharField(max_length=100, choices= PAYMENT_CHOICES)
     amount = models.DecimalField(max_digits=10, decimal_places=2)

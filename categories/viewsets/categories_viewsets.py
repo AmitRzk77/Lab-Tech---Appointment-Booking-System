@@ -1,22 +1,23 @@
-from rest_framework import viewsets, filters
-from ..serializers.categories_serializers import CategorySerializer
-#from ..utilities.pagination import MyPagenumberPagination
-#from rest_framework.permissions import IsAuthenticated
+from rest_framework import viewsets
+from ..serializers.categories_serializers import CategorySerializer, SubCategorySerializer
 from ..models import Category
-from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.filters import SearchFilter
+from rest_framework.permissions import IsAdminUser
+from rest_framework.decorators import action
+from rest_framework.response import Response
 
-
-
-class categoriesViewsets(viewsets.ModelViewSet):
+class CategoryViewSet(viewsets.ModelViewSet):
+    queryset= Category.objects.all().order_by('-id')
     serializer_class = CategorySerializer
+    #permission_classes= [IsAdminUser,]
     queryset = Category.objects.filter(parent__isnull=True).order_by('-id')
     
-    #pagination_class = MyPagenumberPagination
-   # permission_classes = [IsAuthenticated]
+    filter_backends = (SearchFilter,)
+    search_fields = ['category']
 
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        return queryset
+    
 
-def get_queryset(self):
-    queryset = super().get_queryset()  #here we can apply authorization for data
-    return queryset
-
-
+    

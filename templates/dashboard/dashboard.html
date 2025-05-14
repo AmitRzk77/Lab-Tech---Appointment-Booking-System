@@ -1,0 +1,122 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="p-6">
+    <h1 class="text-2xl font-bold mb-6">Dashboard</h1>
+
+    <!-- Overview Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        <div class="bg-white p-4 rounded shadow text-center">
+            <p class="text-sm text-gray-500">Total Appointments</p>
+            <p id="total_appointments" class="text-xl font-semibold">...</p>
+        </div>
+        <div class="bg-white p-4 rounded shadow text-center">
+            <p class="text-sm text-gray-500">Total Services</p>
+            <p id="total_services" class="text-xl font-semibold">...</p>
+        </div>
+        <div class="bg-white p-4 rounded shadow text-center">
+            <p class="text-sm text-gray-500">Total Inquiries</p>
+            <p id="total_inquiries" class="text-xl font-semibold">...</p>
+        </div>
+    </div>
+
+    <!-- Revenue Chart -->
+    <div class="bg-white p-6 rounded shadow mb-6">
+        <h2 class="text-lg font-semibold mb-4">Revenue Chart</h2>
+        <canvas id="revenueChart" height="200"></canvas>
+    </div>
+
+    <!-- Tables -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="bg-white p-4 rounded shadow">
+            <h2 class="text-lg font-semibold mb-2">Recent Bookings</h2>
+            <ul id="recent_bookings" class="space-y-2 text-sm text-gray-800">
+                <!-- Bookings -->
+            </ul>
+        </div>
+
+        <div class="bg-white p-4 rounded shadow">
+            <h2 class="text-lg font-semibold mb-2">Recent Inquiries</h2>
+            <ul id="recent_inquiries" class="space-y-2 text-sm text-gray-800">
+                <!-- Inquiries -->
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- CDNs -->
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<!-- Dashboard Script -->
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        axios.get('/api/dashboard/')
+            .then(response => {
+                const data = response.data;
+
+                // Stats
+                document.getElementById('total_appointments').textContent = data.total_appointments;
+                document.getElementById('total_services').textContent = data.total_services;
+                document.getElementById('total_inquiries').textContent = data.total_inquiries;
+
+                // Revenue Chart Data
+                const labels = data.revenue_chart.map(item => item.month);
+                const revenueData = data.revenue_chart.map(item => item.amount);
+
+                const ctx = document.getElementById('revenueChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Monthly Revenue (Nrs.)',
+                            data: revenueData,
+                            backgroundColor: 'rgba(99, 102, 241, 0.6)',
+                            borderColor: 'rgba(99, 102, 241, 1)',
+                            borderWidth: 1,
+                            borderRadius: 5
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                title: {
+                                    display: true,
+                                    text: 'Amount (Nrs.)'
+                                }
+                            },
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: 'Month'
+                                }
+                            }
+                        }
+                    }
+                });
+
+                // Bookings
+                const bookingsList = document.getElementById('recent_bookings');
+                data.recent_bookings.forEach(booking => {
+                    const li = document.createElement('li');
+                    li.textContent = `${booking.id} - ${booking.date} - Nrs. ${booking.amount}`;
+                    bookingsList.appendChild(li);
+                });
+
+                // Inquiries
+                const inquiriesList = document.getElementById('recent_inquiries');
+                data.recent_inquiries.forEach(inquiry => {
+                    const li = document.createElement('li');
+                    li.textContent = `${inquiry.id} - ${inquiry.name} - ${inquiry.email}`;
+                    inquiriesList.appendChild(li);
+                });
+            })
+            .catch(error => {
+                console.error('Failed to fetch dashboard data:', error);
+            });
+    });
+</script>
+{% endblock %}

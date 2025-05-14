@@ -50,6 +50,8 @@ INSTALLED_APPS = [
     'account',
     'phonenumbers',
     'django_filters',
+    'smart_selects',
+    'drf_yasg',
     
     
 ]
@@ -69,7 +71,7 @@ ROOT_URLCONF = 'labtech.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates',],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [

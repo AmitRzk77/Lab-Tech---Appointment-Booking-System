@@ -4,16 +4,17 @@ from rest_framework import viewsets
 from ..serializers.services_serializers import ServiceListSerializers, ServiceRetriveSerializers, ServiceWriteSerializers
 from ..models import Service
 # from ..utilities.pagination import MyPagenumberPagination
-# from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.filters import SearchFilter
+from ..utilities.pagination import MyPagenumberPagination
 
 class ServiceViewsets(viewsets.ModelViewSet):
     queryset = Service.objects.all().order_by('-id')
     serializer_class = ServiceListSerializers
-    # pagination_class = MyPagenumberPagination
+    pagination_class = MyPagenumberPagination
     # permission_classes = [IsAuthenticated]
     filter_backends = (SearchFilter,)
-    search_fields = ["name", "price", "category__category_name"]
+    search_fields = ["name", "price", "category__category"]
 
 
     def get_queryset(self):
