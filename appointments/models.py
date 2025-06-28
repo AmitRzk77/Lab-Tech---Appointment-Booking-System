@@ -9,6 +9,11 @@ class Appointments(models.Model):
 
     GENDER_CHOICES = [('M', 'Male'), ('F', 'Female'), ('O', 'Other')]
     PAYMENT_CHOICES = [('ONLINE PAYMENT', 'online payment'), ('PAYMENT AT CLINIC', 'payment at clinic')]
+    STATUS_CHOICES = [
+        ('PENDING', 'Pending'),
+        ('APPROVED', 'Approved'),
+        ('REJECTED', 'Rejected'),
+    ]
 
     name = models.CharField(max_length=255, unique=True)
     date = models.DateTimeField()
@@ -22,6 +27,7 @@ class Appointments(models.Model):
     message = models.TextField(blank=True)
     payment_option = models.CharField(max_length=100, choices= PAYMENT_CHOICES)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

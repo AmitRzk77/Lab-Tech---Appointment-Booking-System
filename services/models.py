@@ -15,7 +15,7 @@ class Service(models.Model):
     other_img = models.ImageField(upload_to='services/')
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, related_name= 'services_category')
     sub_category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True)
-    tags = models.CharField()
+    tags = models.CharField(max_length=255)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

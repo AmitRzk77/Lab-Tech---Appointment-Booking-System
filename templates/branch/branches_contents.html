@@ -1,0 +1,185 @@
+<div class="p-6 max-w-7xl mx-auto">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-3xl font-bold text-indigo-600 mb-8">Branch Details</h2>
+        {% if request.user.is_authenticated and request.user.is_superuser %}
+        <button onclick="openForm()" class="bg-green-500 text-white px-4 py-2 rounded">Add Branch</button>
+        {% endif %}
+    </div>
+
+    <div>
+        <h3 class="text-xl font-semibold mb-2">Headquarter</h3>
+        <div id="headquarterBranch" class="grid grid-cols-1 gap-4"></div>
+    </div>
+
+    <div class="mt-8">
+        <h3 class="text-xl font-semibold mb-2">Other Branches</h3>
+        <div id="otherBranches" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4"></div>
+    </div>
+</div>
+
+<!-- Modal Form -->
+ 
+<div id="branchFormModal" class="fixed inset-0 bg-black bg-opacity-50 hidden justify-center items-center z-50">
+    <div class="bg-white p-6 rounded-lg w-full max-w-xl relative">
+        <button onclick="closeForm()" class="absolute top-2 right-2 text-gray-500 hover:text-black">✖</button>
+        <h3 class="text-lg font-bold mb-4" id="formTitle">Add Branch</h3>
+        <form id="branchForm">
+            <input type="hidden" id="branchId">
+            <div class="mb-3">
+                <label>Branch Name</label>
+                <input type="text" id="branchName" class="w-full border px-3 py-2 rounded">
+            </div>
+            <div class="mb-3">
+                <label>Email</label>
+                <input type="email" id="branchEmail" class="w-full border px-3 py-2 rounded">
+            </div>
+            <div class="mb-3">
+                <label>Phone</label>
+                <input type="text" id="branchPhone" class="w-full border px-3 py-2 rounded">
+            </div>
+            <div class="mb-3">
+                <label>Address</label>
+                <textarea id="branchAddress" class="w-full border px-3 py-2 rounded"></textarea>
+            </div>
+            <div class="mb-3">
+                <label>GPS Coordinates</label>
+                <input type="text" id="gpsCoordinate" class="w-full border px-3 py-2 rounded">
+            </div>
+            <div class="flex items-center gap-4 mb-4">
+                <label><input type="radio" name="branchType" value="headquarter"> Headquarter</label>
+                <label><input type="radio" name="branchType" value="other"> Other Branch</label>
+            </div>
+            <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded">Save</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    const isAdmin = "{{ is_admin|yesno:'true,false' }}";
+let branches = [];
+const API_URL = '/api/branches/';
+
+document.addEventListener('DOMContentLoaded', () => {
+    fetchBranches();
+
+    document.getElementById('branchForm').addEventListener('submit', handleSubmit);
+});
+
+function fetchBranches() {
+    fetch(API_URL)
+        .then(res => res.json())
+        .then(json => {
+            branches = json;
+            renderBranches();
+        });
+}
+
+function renderBranches() {
+    const headquarterContainer = document.getElementById('headquarterBranch');
+    const otherContainer = document.getElementById('otherBranches');
+    headquarterContainer.innerHTML = '';
+    otherContainer.innerHTML = '';
+
+    branches.forEach(branch => {
+        let buttons = '';
+        let adminButtons = '';
+            if (isAdmin === "true") {
+            adminButtons = `
+                 <div class="mt-3 flex justify-center gap-2">
+                 <button onclick="editMember(${branch.id})" class="text-blue-600 hover:underline text-sm">Edit</button>
+                 <button onclick="confirmDelete(${branch.id})" class="text-red-600 hover:underline text-sm">Delete</button>
+                </div>`;
+}
+
+
+        const branchCard = `
+            <div class="border rounded p-4 shadow relative bg-white">
+                <h4 class="font-semibold">${branch.name}</h4>
+                <p>Email: ${branch.email}</p>
+                <p>Phone: ${branch.phone}</p>
+                <p>Location: ${branch.address}</p>
+                <p>GPS: ${branch.gps_coordinate}</p>
+                ${buttons}
+            </div>
+        `;
+
+        if (branch.is_headquater) {
+            headquarterContainer.innerHTML += branchCard;
+        } else if (branch.is_other) {
+            otherContainer.innerHTML += branchCard;
+        }
+    });
+}
+
+
+function openForm() {
+    document.getElementById('branchId').value = '';
+    document.getElementById('branchForm').reset();
+    document.getElementById('formTitle').innerText = 'Add Branch';
+    document.getElementById('branchFormModal').classList.remove('hidden');
+    document.getElementById('branchFormModal').classList.add('flex');
+}
+
+function closeForm() {
+    document.getElementById('branchFormModal').classList.add('hidden');
+    document.getElementById('branchFormModal').classList.remove('flex');
+}
+
+function editBranch(id) {
+    const branch = branches.find(b => b.id === id);
+    if (!branch) return;
+
+    document.getElementById('formTitle').innerText = 'Edit Branch';
+    document.getElementById('branchId').value = branch.id;
+    document.getElementById('branchName').value = branch.name;
+    document.getElementById('branchEmail').value = branch.email;
+    document.getElementById('branchPhone').value = branch.phone;
+    document.getElementById('branchAddress').value = branch.address;
+    document.getElementById('gpsCoordinate').value = branch.gps_coordinate;
+    document.querySelector(`input[name="branchType"][value="${branch.is_headquater ? 'headquarter' : 'other'}"]`).checked = true;
+
+    document.getElementById('branchFormModal').classList.remove('hidden');
+    document.getElementById('branchFormModal').classList.add('flex');
+}
+
+function deleteBranch(id) {
+    if (!confirm('Are you sure you want to delete this branch?')) return;
+    fetch(`${API_URL}${id}/`, {
+        method: 'DELETE',
+        headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+    }).then(() => fetchBranches());
+}
+
+function handleSubmit(e) {
+    e.preventDefault();
+    const id = document.getElementById('branchId').value;
+    const payload = {
+        name: document.getElementById('branchName').value,
+        email: document.getElementById('branchEmail').value,
+        phone: document.getElementById('branchPhone').value,
+        address: document.getElementById('branchAddress').value,
+        gps_coordinate: document.getElementById('gpsCoordinate').value,
+        is_headquater: document.querySelector('input[name="branchType"]:checked').value === 'headquarter',
+        is_other: document.querySelector('input[name="branchType"]:checked').value === 'other'
+    };
+
+    const method = id ? 'PUT' : 'POST';
+    const url = id ? `${API_URL}${id}/` : API_URL;
+
+    fetch(url, {
+        method,
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify(payload)
+    })
+    .then(res => res.json())
+    .then(() => {
+        closeForm();
+        fetchBranches();
+    });
+}
+</script>

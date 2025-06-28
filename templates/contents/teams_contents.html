@@ -1,0 +1,168 @@
+
+  <div class="flex justify-between items-center mb-6">
+    <h2 class="text-2xl font-semibold text-gray-700">Meet The Team</h2>
+    {% if request.user.is_authenticated and request.user.is_superuser %}
+    <button onclick="openAddModal()" class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700">Add Team Member</button>
+     {% endif %}
+  </div>
+
+  <!-- Team Cards -->
+  <div id="teamContainer" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+    <!-- Team cards will load here -->
+  </div>
+</div>
+
+<!-- Modal: Add/Edit Team -->
+
+<div id="teamModal" class="fixed inset-0 hidden bg-black bg-opacity-50 flex items-center justify-center z-50">
+  <div class="bg-white w-full max-w-md rounded-lg p-6 relative">
+    <button class="absolute top-2 right-2 text-gray-400 hover:text-gray-600" onclick="closeModal()">✕</button>
+    <h3 id="modalTitle" class="text-lg font-semibold mb-4">Add Team Member</h3>
+    <form id="teamForm" enctype="multipart/form-data" class="space-y-4">
+      <input type="hidden" id="teamId">
+      <div>
+        <label class="block text-sm font-medium text-gray-700">Name</label>
+        <input type="text" id="teamName" class="w-full mt-1 px-3 py-2 border rounded-md" required>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700">Position</label>
+        <input type="text" id="teamPosition" class="w-full mt-1 px-3 py-2 border rounded-md" required>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700">Media</label>
+        <input type="file" id="teamImage" class="mt-1 w-full">
+        <img id="previewImage" class="mt-2 w-24 h-24 object-cover rounded-full hidden">
+      </div>
+      <div class="flex justify-end gap-2 pt-4">
+        <button type="button" class="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400" onclick="closeModal()">Cancel</button>
+        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">Save</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: Delete Confirmation -->
+<div id="deleteModal" class="fixed inset-0 hidden bg-black bg-opacity-50 flex items-center justify-center z-50">
+  <div class="bg-white p-6 rounded-lg shadow-md w-full max-w-sm text-center">
+    <p class="text-gray-700 mb-4">Are you sure you want to remove the team member?</p>
+    <div class="flex justify-center gap-4">
+      <button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400" onclick="closeDeleteModal()">No, Keep</button>
+      <button class="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700" id="confirmDeleteBtn">Yes, Remove</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  isAdmin = "{{ is_admin|yesno:'true,false' }}";
+
+  const teamApi = "/api/team/";
+
+  let editingId = null;
+  let deletingId = null;
+
+  function getCSRFToken() {
+    return document.cookie.split('; ')
+      .find(row => row.startsWith('csrftoken='))
+      ?.split('=')[1];
+  }
+
+  function openAddModal() {
+    editingId = null;
+    document.getElementById('teamForm').reset();
+    document.getElementById('previewImage').style.display = 'none';
+    document.getElementById('modalTitle').innerText = 'Add Team Member';
+    document.getElementById('teamModal').classList.remove('hidden');
+  }
+
+  function closeModal() {
+    document.getElementById('teamModal').classList.add('hidden');
+  }
+
+  function closeDeleteModal() {
+    document.getElementById('deleteModal').classList.add('hidden');
+  }
+
+  function loadTeam() {
+    fetch(teamApi)
+      .then(res => res.json())
+      .then(data => {
+        const container = document.getElementById('teamContainer');
+        container.innerHTML = '';
+
+        data.forEach(member => {
+          let adminButtons = '';
+          if (isAdmin === "true") {
+            adminButtons = `
+              <div class="mt-3 flex justify-center gap-2">
+                <button onclick="editMember(${member.id})" class="text-blue-600 hover:underline text-sm">Edit</button>
+                <button onclick="confirmDelete(${member.id})" class="text-red-600 hover:underline text-sm">Delete</button>
+              </div>`;
+          }
+
+          container.innerHTML += `
+            <div class="bg-white p-4 rounded-lg shadow-md text-center">
+              <img src="${member.image}" class="w-20 h-20 rounded-full mx-auto object-cover mb-2">
+              <h4 class="font-semibold text-gray-800">${member.name}</h4>
+              <p class="text-sm text-gray-500">${member.position}</p>
+              ${adminButtons}
+            </div>`;
+        });
+      })
+      .catch(error => {
+        console.error('Failed to load team data:', error);
+      });
+  }
+
+  async function editMember(id) {
+    const res = await fetch(`${teamApi}${id}/`);
+    const member = await res.json();
+    editingId = id;
+    document.getElementById('teamName').value = member.name;
+    document.getElementById('teamPosition').value = member.position;
+    document.getElementById('previewImage').src = member.image;
+    document.getElementById('previewImage').style.display = 'block';
+    document.getElementById('modalTitle').innerText = 'Edit Team Member';
+    document.getElementById('teamModal').classList.remove('hidden');
+  }
+
+  document.getElementById('teamForm').addEventListener('submit', async function (e) {
+    e.preventDefault();
+    const formData = new FormData();
+    formData.append('name', document.getElementById('teamName').value);
+    formData.append('position', document.getElementById('teamPosition').value);
+    const file = document.getElementById('teamImage').files[0];
+    if (file) formData.append('image', file);
+
+    const url = editingId ? `${teamApi}${editingId}/` : teamApi;
+    const method = editingId ? 'PATCH' : 'POST';
+
+    await fetch(url, {
+      method: method,
+      headers: {
+        'X-CSRFToken': getCSRFToken()
+      },
+      body: formData,
+    });
+
+    closeModal();
+    loadTeam();
+  });
+
+  function confirmDelete(id) {
+    deletingId = id;
+    document.getElementById('deleteModal').classList.remove('hidden');
+  }
+
+  document.getElementById('confirmDeleteBtn').addEventListener('click', async () => {
+    await fetch(`${teamApi}${deletingId}/`, {
+      method: 'DELETE',
+      headers: {
+        'X-CSRFToken': getCSRFToken()
+      }
+    });
+    closeDeleteModal();
+    loadTeam();
+  });
+
+  document.addEventListener('DOMContentLoaded', loadTeam);
+</script>

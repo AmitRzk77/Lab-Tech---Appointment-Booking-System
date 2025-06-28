@@ -2,8 +2,11 @@
 {% block content %}
 <div class="p-6">
     <div class="flex justify-between items-center mb-4">
-        <h2 class="text-xl font-semibold">Booking Management</h2>
-        <a href="#" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded">+ Add Appointment</a>
+        <h1 class="text-3xl font-bold text-indigo-600 mb-8">Booking Management</h1>
+        
+        <a href="{% url 'add_appointment' %}" class="bg-blue-500 text-white px-3 py-1 rounded">
+            + Add Appointment
+        </a>
     </div>
 
     <!-- Filters -->
@@ -11,14 +14,17 @@
         <select id="service-filter" class="border p-2 rounded">
             <option value="">All Services</option>
         </select>
-        <select id="payment-filter" class="border p-2 rounded">
+
+        <select id="payment-filter" class="border p-2 rounded" onchange="loadAppointments()">
             <option value="">All Payment Options</option>
             <option value="ONLINE PAYMENT">Online Payment</option>
             <option value="PAYMENT AT CLINIC">Payment at Clinic</option>
         </select>
+
         <input type="text" id="search" placeholder="Search by name/email/phone"
-            class="border p-2 rounded w-64" />
-        <button onclick="loadAppointments()" class="bg-blue-500 text-white px-4 py-2 rounded">Filter</button>
+               class="border p-2 rounded w-64" oninput="loadAppointments()" />
+
+        <button onclick="resetFilters()" class="bg-gray-400 text-white px-3 py-2 rounded">Reset</button>
     </div>
 
     <!-- Table -->
@@ -36,6 +42,7 @@
                     <th class="border px-2 py-2">Amount</th>
                     <th class="border px-2 py-2">Payment Option</th>
                     <th class="border px-2 py-2">Message</th>
+                    <th class="border px-2 py-2">Status</th>
                     <th class="border px-2 py-2">Actions</th>
                 </tr>
             </thead>
@@ -50,6 +57,22 @@
 <script>
     const apiBase = '/api/appointments/';
 
+    function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.startsWith(name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+
     async function loadAppointments() {
         const service = document.getElementById('service-filter').value;
         const payment = document.getElementById('payment-filter').value;
@@ -60,7 +83,8 @@
         if (payment) params.append('payment_option', payment);
         if (search) params.append('search', search);
 
-        const response = await fetch(`${apiBase}?${params.toString()}`);
+        const finalUrl = `${apiBase}?${params.toString()}`;
+        const response = await fetch(finalUrl);
         const data = await response.json();
         const tbody = document.getElementById('appointments-body');
         tbody.innerHTML = '';
@@ -75,17 +99,66 @@
                     <td class="border px-2 py-1">${item.address}</td>
                     <td class="border px-2 py-1">${item.gender}</td>
                     <td class="border px-2 py-1">${item.service_name || '—'}</td>
+
+                    
                     <td class="border px-2 py-1">NPR. ${item.amount}</td>
                     <td class="border px-2 py-1">${item.payment_option}</td>
                     <td class="border px-2 py-1">${item.message ? item.message.slice(0, 20) + '...' : '—'}</td>
-                    <td class="border px-2 py-1 text-center">
-                        <button class="text-blue-600 hover:underline" onclick="viewDetails(${item.id})">Details</button>
+                    <td class="border px-2 py-1 font-semibold ${item.status === 'PENDING' ? 'text-red-500' : 'text-green-600'}">
+                        ${item.status}
                     </td>
+                    <td class="border px-2 py-1 text-center">
+                         <button class="text-blue-600 hover:underline mr-2" onclick="viewDetails(${item.id})">Details</button>
+                         ${item.status === 'PENDING' ? 
+                             `<button class="text-green-600 hover:underline mr-2" onclick="approveAppointment(${item.id})">Approve</button>
+                             <button class="text-red-600 hover:underline" onclick="rejectAppointment(${item.id})">Reject</button>` 
+                         : ''}
+        </td>
                 </tr>
             `;
             tbody.insertAdjacentHTML('beforeend', row);
         });
     }
+
+    async function approveAppointment(id) {
+        const confirmApproval = confirm("Are you sure you want to approve this appointment?");
+        if (!confirmApproval) return;
+
+        const response = await fetch(`${apiBase}${id}/approve/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        });
+
+        if (response.ok) {
+            alert("Appointment approved successfully.");
+            loadAppointments();
+        } else {
+            alert("Failed to approve appointment.");
+        }
+    }
+    async function rejectAppointment(id) {
+        const confirmReject = confirm("Are you sure you want to reject this appointment?");
+        if (!confirmReject) return;
+
+        const response = await fetch(`${apiBase}${id}/reject/`, {
+             method: 'POST',
+             headers: {
+                  'Content-Type': 'application/json',
+                  'X-CSRFToken': getCookie('csrftoken')
+            }
+        });
+
+    if (response.ok) {
+        alert("Appointment rejected.");
+        loadAppointments();
+    } else {
+        alert("Failed to reject appointment.");
+    }
+}
+
 
     async function loadServiceOptions() {
         const response = await fetch('/api/services/');
@@ -101,7 +174,13 @@
 
     function viewDetails(id) {
         alert(`You can load full details of appointment ID: ${id}`);
-        // Optionally show modal or redirect
+    }
+
+    function resetFilters() {
+        document.getElementById('service-filter').value = '';
+        document.getElementById('payment-filter').value = '';
+        document.getElementById('search').value = '';
+        loadAppointments();
     }
 
     document.addEventListener('DOMContentLoaded', () => {

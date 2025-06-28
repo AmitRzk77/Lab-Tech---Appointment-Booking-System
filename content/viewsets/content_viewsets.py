@@ -20,9 +20,13 @@ class BannerViewSet(viewsets.ModelViewSet):
         return super().update(request, *args, **kwargs)
 
     
+#class GalleryViewSet(viewsets.ModelViewSet):
+#    queryset = Gallery.objects.all()
+ #   serializer_class = GallerySerializer
 class GalleryViewSet(viewsets.ModelViewSet):
-    queryset = Gallery.objects.all()
+    queryset = Gallery.objects.prefetch_related('images').all()
     serializer_class = GallerySerializer
+
 
     
     

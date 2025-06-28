@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="p-6 max-w-4xl mx-auto">
+    <h2 class="text-2xl font-semibold mb-4">Pop Up</h2>
+
+    <!-- Add New Pop Up -->
+    <form id="popupForm" class="space-y-4 mb-8">
+        <div>
+            <label class="block mb-1 font-medium">Title</label>
+            <input type="text" name="title" class="w-full border rounded px-3 py-2" required>
+        </div>
+        <div>
+            <label class="block mb-1 font-medium">Upload PopUp Image</label>
+            <input type="file" name="imgs" accept="image/*" class="w-full border rounded px-3 py-2" required>
+        </div>
+        <div>
+            <label class="block mb-1 font-medium">Add Image Link</label>
+            <input type="url" name="links" class="w-full border rounded px-3 py-2">
+        </div>
+        <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+            Add Pop Up
+        </button>
+    </form>
+
+    <!-- List Existing Pop Ups -->
+    <div id="popupList" class="grid grid-cols-2 gap-4">
+        <!-- Popups will be appended here -->
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const popupList = document.getElementById('popupList');
+
+    // ✅ Fetch popups
+    fetch('/api/popups/')
+        .then(res => res.json())
+        .then(data => {
+            data.forEach(popup => {
+                const div = document.createElement('div');
+                div.className = "border p-4 rounded shadow";
+                div.innerHTML = `
+                    <img src="${popup.imgs}" class="w-full h-40 object-cover rounded mb-2" />
+                    <h3 class="text-lg font-semibold">${popup.title}</h3>
+                    <a href="${popup.links}" class="text-blue-500 underline" target="_blank">${popup.links}</a>
+                `;
+                popupList.appendChild(div);
+            });
+        });
+
+    // ✅ Handle form submission
+    document.getElementById('popupForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        const form = e.target;
+        const formData = new FormData();
+        formData.append('title', form.title.value);
+        formData.append('imgs', form.imgs.files[0]);
+        formData.append('links', form.links.value);
+
+        fetch('/api/popups/', {
+            method: 'POST',
+            body: formData
+        })
+        .then(res => {
+            if (!res.ok) throw new Error("Upload failed");
+            return res.json();
+        })
+        .then(data => {
+            alert('Popup uploaded successfully');
+            window.location.reload();
+        })
+        .catch(err => {
+            console.error(err);
+            alert('Failed to upload popup');
+        });
+    });
+});
+</script>
+{% endblock %}

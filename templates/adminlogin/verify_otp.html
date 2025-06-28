@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="flex items-center justify-center min-h-screen bg-gray-100">
+    <div class="bg-white p-8 rounded shadow-md w-full max-w-md">
+        <h2 class="text-xl font-semibold text-center text-indigo-600 mb-4">Verify OTP</h2>
+        <form id="verifyOtpForm">
+            <input type="hidden" name="email" value="{{ email }}" />
+            <label class="block text-sm font-medium text-gray-700">OTP</label>
+            <input type="text" name="otp" required class="w-full p-2 border mt-1 rounded mb-4" />
+            <button type="submit" class="w-full bg-indigo-600 text-white py-2 rounded">Verify</button>
+        </form>
+        <p id="message" class="text-sm mt-4 text-green-600"></p>
+    </div>
+</div>
+
+<script>
+    document.getElementById("verifyOtpForm").addEventListener("submit", function(e) {
+        e.preventDefault();
+        const form = e.target;
+        const data = {
+            email: form.email.value,
+            otp: form.otp.value
+        };
+
+        fetch('/api/account/verify-otp/', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(data)
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.message) {
+                document.getElementById("message").innerText = data.message;
+                window.location.href = "{% url 'admin-set-password-page' %}?email=" + form.email.value;
+            } else {
+                document.getElementById("message").innerText = data.error || "Invalid OTP.";
+            }
+        });
+    });
+</script>
+{% endblock %}

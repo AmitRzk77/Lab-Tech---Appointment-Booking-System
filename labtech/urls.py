@@ -35,6 +35,12 @@ from rest_framework import permissions
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 
+from django.conf import settings
+from django.conf.urls.static import static
+
+
+
+
 
 
 
@@ -69,11 +75,21 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include(router.urls)),
     path('chaining/', include('smart_selects.urls')),
-    path('dashboard/', include('dashboard.urls')),
+    path('dashboard/', include('dashboard.urls')),    
+    path('account/', include('account.urls')),    
     path('services/', include('services.urls')),
     path('appointments/', include('appointments.urls')),
+    path('content/', include('content.urls')),
+    path('contact/', include('contact.urls')),
+    path('categories/', include('categories.urls')),
+    path('branches/', include('branches.urls')),
+    path('social/', include('social.urls')),
+    path('faqs/', include('faqs.urls')),
     path('', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
-    path('/api', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
+    path('api', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
     path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
     
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

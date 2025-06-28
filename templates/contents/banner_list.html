@@ -1,0 +1,104 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="p-6 space-y-6">
+    <div class="flex justify-between items-center mb-4">
+        <h1 class="text-3xl font-bold text-indigo-600 mb-8">Banner & Text</h2>
+        <!-- You may skip +Add Banner button since only one banner is allowed -->
+    </div>
+
+    <!-- Preview Section -->
+    <div id="banner-preview" class="bg-white shadow p-4 rounded space-y-4">
+        <h3 class="text-lg font-semibold">Current Banner</h3>
+        <div id="banner-content" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+                <img id="banner-image" src="" alt="No Image" class="w-full h-auto max-h-64 object-cover rounded" />
+                <p class="text-sm mt-1"><strong>Image Link:</strong> <span id="image-link"></span></p>
+            </div>
+            <div>
+                <video id="banner-video" controls class="w-full max-h-64 rounded"></video>
+                <p class="text-sm mt-1"><strong>Video Link:</strong> <span id="video-link"></span></p>
+            </div>
+        </div>
+        <p class="mt-4"><strong>Description:</strong> <span id="banner-description"></span></p>
+    </div>
+
+    <!-- Edit Form -->
+    <form id="banner-form" class="bg-white p-4 shadow rounded" enctype="multipart/form-data">
+        <h3 class="text-lg font-semibold mb-2">Update Banner</h3>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label class="block">Image</label>
+                <input type="file" name="img" class="border p-2 w-full rounded" />
+            </div>
+            <div>
+                <label class="block">Image Link</label>
+                <input type="url" name="img_link" class="border p-2 w-full rounded" />
+            </div>
+            <div>
+                <label class="block">Video</label>
+                <input type="file" name="video" class="border p-2 w-full rounded" />
+            </div>
+            <div>
+                <label class="block">Video Link</label>
+                <input type="url" name="video_link" class="border p-2 w-full rounded" />
+            </div>
+        </div>
+
+        <div class="mt-4">
+            <label class="block">Description</label>
+            <textarea name="description" rows="4" class="border p-2 w-full rounded"></textarea>
+        </div>
+
+        <button type="submit" class="mt-4 bg-blue-600 text-white px-4 py-2 rounded">Update Banner</button>
+    </form>
+</div>
+
+<script>
+    const apiUrl = '/api/banners/';
+
+    let bannerId = null;
+
+    async function loadBanner() {
+        const res = await fetch(apiUrl);
+        const data = await res.json();
+        const banner = data.results ? data.results[0] : data[0];  // Handles if pagination is added
+
+        if (!banner) return;
+
+        bannerId = banner.id;
+
+        document.getElementById('banner-image').src = banner.img || '';
+        document.getElementById('image-link').textContent = banner.img_link || '—';
+        document.getElementById('banner-video').src = banner.video || '';
+        document.getElementById('video-link').textContent = banner.video_link || '—';
+        document.getElementById('banner-description').textContent = banner.description || '—';
+    }
+
+    document.getElementById('banner-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const form = e.target;
+        const formData = new FormData(form);
+
+        const method = bannerId ? 'PUT' : 'POST';
+        const url = bannerId ? `${apiUrl}${bannerId}/` : apiUrl;
+
+        const res = await fetch(url, {
+            method: method,
+            body: formData
+        });
+
+        if (res.ok) {
+            alert('Banner updated successfully!');
+            loadBanner();
+            form.reset();
+        } else {
+            alert('Error updating banner.');
+        }
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+        loadBanner();
+    });
+</script>
+{% endblock %}

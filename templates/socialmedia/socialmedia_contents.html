@@ -1,0 +1,159 @@
+<meta name="csrf-token" content="{{ csrf_token }}">
+
+<div class="p-6 max-w-6xl mx-auto">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-3xl font-bold text-indigo-600 mb-8">Social Media</h1>
+        {% if request.user.is_authenticated and request.user.is_superuser %}
+        <button onclick="openAddModal()" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+            + Add Social Media
+        </button>
+        {% endif %}
+    </div>
+
+    <div class="space-y-4" id="socialMediaList">
+        <!-- List of social media items will be rendered here -->
+    </div>
+</div>
+
+<!-- Add/Edit Modal -->
+<div id="socialModal" class="fixed inset-0 bg-black bg-opacity-50 hidden justify-center items-center z-50">
+    <div class="bg-white p-6 rounded-lg max-w-md w-full relative">
+        <button onclick="closeModal()" class="absolute top-2 right-2 text-gray-600">✖</button>
+        <h3 class="text-xl font-semibold mb-4" id="modalTitle">Add Social Media</h3>
+        <form id="socialForm" enctype="multipart/form-data">
+            {% csrf_token %}
+            <input type="hidden" id="socialId">
+            <div class="mb-4">
+                <label class="block mb-1 font-medium">Title</label>
+                <input type="text" id="title" class="w-full border px-3 py-2 rounded" required>
+            </div>
+            <div class="mb-4">
+                <label class="block mb-1 font-medium">Link</label>
+                <input type="url" id="link" class="w-full border px-3 py-2 rounded" required>
+            </div>
+            <div class="mb-4">
+                <label class="block mb-1 font-medium">Logo</label>
+                <input type="file" id="logo" class="w-full border px-3 py-2 rounded">
+            </div>
+            <button type="submit" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
+                Save
+            </button>
+        </form>
+    </div>
+</div>
+
+<script>
+    const isAdmin = "{{ is_admin|yesno:'true,false' }}";
+    const API_URL = "/api/social/";
+    let socialData = [];
+
+    const csrftoken = document.querySelector('[name=csrf-token]')?.content;
+
+    function fetchSocialMedia() {
+        fetch(API_URL)
+            .then(res => res.json())
+            .then(data => {
+                socialData = data;
+                renderSocialMediaList();
+            });
+    }
+
+    function renderSocialMediaList() {
+        const container = document.getElementById("socialMediaList");
+        container.innerHTML = "";
+
+        socialData.forEach(item => {
+            let adminControls = '';
+            if (isAdmin === "true") {
+                adminControls = `
+                    <div class="flex gap-2">
+                        <button onclick="editItem(${item.id})" class="text-green-600 hover:underline">Edit</button>
+                        <button onclick="deleteItem(${item.id})" class="text-red-600 hover:underline">Delete</button>
+                    </div>
+                `;
+            }
+
+            const div = document.createElement("div");
+            div.className = "flex justify-between items-center p-4 border rounded shadow";
+            div.innerHTML = `
+                <div class="flex items-center gap-4">
+                    <img src="${item.logo}" alt="${item.title}" class="w-8 h-8">
+                    <div>
+                        <h4 class="font-semibold">${item.title}</h4>
+                        <a href="${item.link}" class="text-blue-500 hover:underline" target="_blank">${item.link}</a>
+                    </div>
+                </div>
+                ${adminControls}
+            `;
+            container.appendChild(div);
+        });
+    }
+
+    function openAddModal() {
+        document.getElementById("socialForm").reset();
+        document.getElementById("socialId").value = "";
+        document.getElementById("modalTitle").innerText = "Add Social Media";
+        document.getElementById("socialModal").classList.remove("hidden");
+        document.getElementById("socialModal").classList.add("flex");
+    }
+
+    function editItem(id) {
+        const item = socialData.find(i => i.id === id);
+        if (!item) return;
+
+        document.getElementById("socialId").value = item.id;
+        document.getElementById("title").value = item.title;
+        document.getElementById("link").value = item.link;
+        document.getElementById("modalTitle").innerText = "Edit Social Media";
+        document.getElementById("socialModal").classList.remove("hidden");
+        document.getElementById("socialModal").classList.add("flex");
+    }
+
+    function deleteItem(id) {
+        if (confirm("Are you sure to delete?")) {
+            fetch(`${API_URL}${id}/`, {
+                method: "DELETE",
+                headers: {
+                    "X-CSRFToken": csrftoken
+                }
+            }).then(() => fetchSocialMedia());
+        }
+    }
+
+    function closeModal() {
+        document.getElementById("socialModal").classList.add("hidden");
+        document.getElementById("socialModal").classList.remove("flex");
+    }
+
+    document.getElementById("socialForm").addEventListener("submit", function (e) {
+        e.preventDefault();
+
+        const id = document.getElementById("socialId").value;
+        const title = document.getElementById("title").value;
+        const link = document.getElementById("link").value;
+        const logoInput = document.getElementById("logo");
+
+        const formData = new FormData();
+        formData.append("title", title);
+        formData.append("link", link);
+        if (logoInput.files.length > 0) {
+            formData.append("logo", logoInput.files[0]);
+        }
+
+        const url = id ? `${API_URL}${id}/` : API_URL;
+        const method = id ? "PATCH" : "POST";
+
+        fetch(url, {
+            method: method,
+            headers: {
+                "X-CSRFToken": csrftoken
+            },
+            body: formData,
+        }).then(() => {
+            closeModal();
+            fetchSocialMedia();
+        });
+    });
+
+    fetchSocialMedia();
+</script>

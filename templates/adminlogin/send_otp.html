@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="flex items-center justify-center min-h-screen bg-gray-100">
+    <div class="bg-white p-8 rounded shadow-md w-full max-w-md">
+        <h2 class="text-xl font-semibold text-center text-indigo-600 mb-4">Reset Password</h2>
+        <form id="sendOtpForm">
+            <label class="block text-sm font-medium text-gray-700">Admin Email</label>
+            <input type="email" name="email" required class="w-full p-2 border mt-1 rounded mb-4" />
+            <button type="submit" class="w-full bg-indigo-600 text-white py-2 rounded">Send OTP</button>
+        </form>
+        <p id="message" class="text-sm mt-4 text-green-600"></p>
+    </div>
+</div>
+
+<script>
+    document.getElementById("sendOtpForm").addEventListener("submit", function(e) {
+        e.preventDefault();
+        const email = e.target.email.value;
+
+        fetch('/api/account/send-otp/', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ email })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.message) {
+                document.getElementById("message").innerText = data.message + " Proceed to verify OTP.";
+                window.location.href = "{% url 'admin-verify-otp-page' %}?email=" + email;
+            } else {
+                document.getElementById("message").innerText = data.error || "Failed to send OTP.";
+            }
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="max-w-md mx-auto bg-white p-6 rounded-lg shadow mt-10">
+    <h2 class="text-2xl font-bold mb-4 text-gray-800">Create Categories</h2>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="mb-4 px-4 py-2 rounded text-white {{ message.tags }} bg-green-500">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <form method="POST">
+        {% csrf_token %}
+
+        <!-- Category Name -->
+        <div class="mb-4">
+            <label for="category" class="block text-sm font-medium text-gray-700 mb-1">Category Name</label>
+            <input type="text" name="category" id="category" class="w-full border px-3 py-2 rounded" placeholder="e.g. ADA SERUM" required>
+        </div>
+
+        <!-- Parent Category Dropdown -->
+        <div class="mb-6">
+            <label for="parent" class="block text-sm font-medium text-gray-700 mb-1">Main Category</label>
+            <select name="parent" id="parent" class="w-full border px-3 py-2 rounded">
+                <option value="">Select Category</option>
+                {% for cat in categories %}
+                    <option value="{{ cat.id }}">{{ cat.category }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- Submit Button -->
+        <div class="text-right">
+            <button type="submit" class="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700">Create</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

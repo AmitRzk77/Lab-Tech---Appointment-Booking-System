@@ -14,14 +14,32 @@ class CategoryNestedSerializer(serializers.ModelSerializer):
         model = Category
         fields = [ 'category', 'parent']
 
+#class AppointmentListSerializers(serializers.ModelSerializer):
+    #service = ServiceNestedSerializer(read_only=True)
+    #category = CategoryNestedSerializer(read_only=True)
+    #sub_category = CategoryNestedSerializer(read_only=True)
 class AppointmentListSerializers(serializers.ModelSerializer):
-    service = ServiceNestedSerializer(read_only=True)
-    category = CategoryNestedSerializer(read_only=True)
-    sub_category = CategoryNestedSerializer(read_only=True)
+    service_id = serializers.IntegerField(source='service.id', read_only=True)
+    service_name = serializers.CharField(source='service.name', read_only=True)
+    category_id = serializers.IntegerField(source='category.id', read_only=True)
+    category_name = serializers.CharField(source='category.category', read_only=True)
+
 
     class Meta:
         model = Appointments
-        fields = '__all__'
+        fields = [
+            'id', 'name', 'date', 'email', 'phone_number', 'address', 'gender',
+            'service_id', 'service_name', 'category_id', 'category_name',
+            'message', 'payment_option', 'amount', 'created_at', 'updated_at', 'status'
+        ]
+    
+    
+
+    
+
+
+
+    
 
 class AppointmentsRetriveSerializers(serializers.ModelSerializer):
     service = ServiceNestedSerializer(read_only=True)
