@@ -171,3 +171,5 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 
+TIME_ZONE = 'Asia/Kathmandu'
+USE_TZ = True  # Or False if you want naive datetimes (not recommended)

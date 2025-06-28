@@ -73,6 +73,8 @@ function fetchBranches() {
             renderBranches();
         });
 }
+const localDate = new Date(apiDateString).toLocaleString();
+
 
 function renderBranches() {
     const headquarterContainer = document.getElementById('headquarterBranch');
