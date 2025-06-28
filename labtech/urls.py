@@ -34,7 +34,7 @@ from account.router.account_routers import router as account_router
 from rest_framework import permissions
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
-# from dashboard.views import dashboard_page
+from dashboard.views import dashboard_page
 
 from django.conf import settings
 from django.conf.urls.static import static
@@ -86,10 +86,10 @@ urlpatterns = [
     path('branches/', include('branches.urls')),
     path('social/', include('social.urls')),
     path('faqs/', include('faqs.urls')),
-    # path('', dashboard_page, name='home'),
-    path('', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
-    path('api', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
-    path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
+    path('', dashboard_page, name='home'),
+    # path('', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
+    # path('api', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
+    # path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
     
 ]
 
