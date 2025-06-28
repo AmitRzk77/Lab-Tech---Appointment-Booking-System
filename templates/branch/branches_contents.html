@@ -57,7 +57,9 @@
 <script>
     const isAdmin = "{{ is_admin|yesno:'true,false' }}";
 let branches = [];
-const API_URL = '/api/branches/';
+const BASE_URL = window.location.origin;
+
+const API_URL = `{BASE_URL}/api/branches/`;
 
 document.addEventListener('DOMContentLoaded', () => {
     fetchBranches();
