@@ -85,6 +85,9 @@ function renderBranches() {
     branches.forEach(branch => {
         let buttons = '';
         let adminButtons = '';
+        const localDate = branch.created_at 
+            ? new Date(branch.created_at).toLocaleString() 
+            : 'N/A';
             if (isAdmin === "true") {
             adminButtons = `
                  <div class="mt-3 flex justify-center gap-2">
