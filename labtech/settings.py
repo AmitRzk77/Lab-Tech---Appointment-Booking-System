@@ -27,7 +27,7 @@ SECRET_KEY = 'django-insecure-r_+0tx1a^2ukk#)_ynt)ef(i38@l2n%ncw30z-jsc9+xbh)%=!
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['.onrender.com', 'localhost']
+ALLOWED_HOSTS = ['.onrender.com', 'localhost',  '127.0.0.1']
 
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'unsafe-secret-key')
 DEBUG = os.environ.get('DEBUG', 'False') == 'True'
@@ -58,6 +58,7 @@ INSTALLED_APPS = [
     'django_filters',
     'smart_selects',
     'drf_yasg',
+    'corsheaders',
     
     
 ]
@@ -72,8 +73,12 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
 ]
-
+MIDDLEWARE = ['corsheaders.middleware.CorsMiddleware'] + MIDDLEWARE
 ROOT_URLCONF = 'labtech.urls'
+CORS_ALLOWED_ORIGINS = [
+    'https://lab-tech-appointment-booking-system.onrender.com/',
+    'http://localhost:8000',
+]
 
 TEMPLATES = [
     {
