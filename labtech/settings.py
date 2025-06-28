@@ -76,7 +76,7 @@ MIDDLEWARE = [
 MIDDLEWARE = ['corsheaders.middleware.CorsMiddleware'] + MIDDLEWARE
 ROOT_URLCONF = 'labtech.urls'
 CORS_ALLOWED_ORIGINS = [
-    'https://lab-tech-appointment-booking-system.onrender.com/',
+    'https://lab-tech-appointment-booking-system.onrender.com',
     'http://localhost:8000',
 ]
 
